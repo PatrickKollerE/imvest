@@ -44,7 +44,21 @@ export default function Navigation() {
 			<nav className="bg-white border-b">
 				<div className="flex h-16">
 					<div className="px-4 sm:px-6 lg:px-8 flex items-center">
-						<div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
+						<div className="h-6 w-16 bg-gray-200 rounded animate-pulse"></div>
+					</div>
+					<div className="flex-1 flex justify-between items-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+						<div className="hidden md:flex space-x-8">
+							<div className="h-6 w-20 bg-gray-200 rounded animate-pulse"></div>
+							<div className="h-6 w-16 bg-gray-200 rounded animate-pulse"></div>
+							<div className="h-6 w-20 bg-gray-200 rounded animate-pulse"></div>
+						</div>
+						<div className="flex items-center space-x-4">
+							<div className="flex items-center space-x-2">
+								<div className="h-6 w-8 bg-gray-200 rounded animate-pulse"></div>
+								<div className="h-6 w-8 bg-gray-200 rounded animate-pulse"></div>
+							</div>
+							<div className="h-6 w-16 bg-gray-200 rounded animate-pulse"></div>
+						</div>
 					</div>
 				</div>
 			</nav>

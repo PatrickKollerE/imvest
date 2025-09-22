@@ -34,7 +34,14 @@ export default function IncomeExpensesTab({ propertyId, incomes, expenses }: Inc
 	const [error, setError] = useState<string | null>(null);
 	const t = useTranslations();
 
-	const allTransactions = [...incomes.map(i => ({ ...i, type: 'income' as const })), ...expenses.map(e => ({ ...e, type: 'expense' as const }))].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+	// Filter out future dates as a safety measure
+	const today = new Date();
+	today.setHours(23, 59, 59, 999); // End of today
+	
+	const filteredIncomes = incomes.filter(income => new Date(income.date) <= today);
+	const filteredExpenses = expenses.filter(expense => new Date(expense.date) <= today);
+	
+	const allTransactions = [...filteredIncomes.map(i => ({ ...i, type: 'income' as const })), ...filteredExpenses.map(e => ({ ...e, type: 'expense' as const }))].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 	
 	// Filter transactions based on active tab
 	const filteredTransactions = allTransactions.filter(transaction => {

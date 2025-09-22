@@ -27,7 +27,7 @@ type Property = {
 		leaseEnd: Date | null;
 		baseRentCents: number | null;
 		contractUrl: string | null;
-		status: 'ACTIVE' | 'INACTIVE';
+		status: 'ACTIVE' | 'INACTIVE' | 'DRAFT';
 	}>;
 	incomes: Array<{ 
 		id: string; 

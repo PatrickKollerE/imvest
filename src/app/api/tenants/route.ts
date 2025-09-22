@@ -2,6 +2,30 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId, getFirstOrganizationIdForUser } from "@/lib/auth-helpers";
 
+// Helper function to determine if tenant data is complete enough for ACTIVE status
+function isTenantDataComplete(tenantData: {
+	name?: string;
+	contactEmail?: string | null;
+	contactPhone?: string | null;
+	leaseStart?: string | Date | null;
+	leaseEnd?: string | Date | null;
+	baseRentCents?: number | null;
+}): boolean {
+	// Required fields for ACTIVE status:
+	// 1. Name must be provided
+	// 2. Base rent must be provided and > 0
+	// 3. Lease start date must be provided
+	// 4. At least one contact method (email or phone) must be provided
+	
+	const hasName = !!(tenantData.name && tenantData.name.trim().length > 0);
+	const hasValidRent = !!(tenantData.baseRentCents && tenantData.baseRentCents > 0);
+	const hasLeaseStart = !!tenantData.leaseStart;
+	const hasContactInfo = !!(tenantData.contactEmail && tenantData.contactEmail.trim().length > 0) || 
+						   !!(tenantData.contactPhone && tenantData.contactPhone.trim().length > 0);
+	
+	return hasName && hasValidRent && hasLeaseStart && hasContactInfo;
+}
+
 export async function POST(req: Request) {
 	const userId = await getCurrentUserId();
 	if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -11,6 +35,11 @@ export async function POST(req: Request) {
 
 	const body = await req.json();
 	const { propertyId, name, contactEmail, contactPhone, leaseStart, leaseEnd, baseRentCents } = body;
+
+	// Determine tenant status based on data completeness
+	const tenantData = { name, contactEmail, contactPhone, leaseStart, leaseEnd, baseRentCents };
+	const isComplete = isTenantDataComplete(tenantData);
+	const status = isComplete ? 'ACTIVE' : 'DRAFT';
 
 	// Verify property belongs to user's organization
 	const property = await prisma.property.findFirst({
@@ -36,6 +65,7 @@ export async function POST(req: Request) {
 					leaseStart: leaseStart ? new Date(leaseStart) : null,
 					leaseEnd: leaseEnd ? new Date(leaseEnd) : null,
 					baseRentCents: baseRentCents || null,
+					status: status as 'ACTIVE' | 'INACTIVE' | 'DRAFT',
 				},
 			});
 
@@ -116,6 +146,22 @@ export async function PUT(req: Request) {
 		return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
 	}
 
+	// Determine tenant status based on data completeness
+	const updatedData = {
+		name: name !== undefined ? name : existingTenant.name,
+		contactEmail: contactEmail !== undefined ? contactEmail : existingTenant.contactEmail,
+		contactPhone: contactPhone !== undefined ? contactPhone : existingTenant.contactPhone,
+		leaseStart: leaseStart !== undefined ? leaseStart : existingTenant.leaseStart,
+		leaseEnd: leaseEnd !== undefined ? leaseEnd : existingTenant.leaseEnd,
+		baseRentCents: baseRentCents !== undefined ? baseRentCents : existingTenant.baseRentCents,
+	};
+	
+	const isComplete = isTenantDataComplete(updatedData);
+	// Only update status if tenant is currently DRAFT or if data becomes incomplete
+	const newStatus = existingTenant.status === 'DRAFT' || !isComplete ? 
+		(isComplete ? 'ACTIVE' : 'DRAFT') : 
+		existingTenant.status;
+
 	try {
 		const result = await prisma.$transaction(async (tx) => {
 			// Update the tenant
@@ -128,6 +174,7 @@ export async function PUT(req: Request) {
 					leaseStart: leaseStart !== undefined ? (leaseStart ? new Date(leaseStart) : null) : existingTenant.leaseStart,
 					leaseEnd: leaseEnd !== undefined ? (leaseEnd ? new Date(leaseEnd) : null) : existingTenant.leaseEnd,
 					baseRentCents: baseRentCents !== undefined ? baseRentCents : existingTenant.baseRentCents,
+					status: newStatus as 'ACTIVE' | 'INACTIVE' | 'DRAFT',
 				},
 			});
 
@@ -264,8 +311,8 @@ export async function PATCH(req: Request) {
 	}
 
 	// Validate status
-	if (status !== 'ACTIVE' && status !== 'INACTIVE') {
-		return NextResponse.json({ error: "Invalid status. Must be 'ACTIVE' or 'INACTIVE'" }, { status: 400 });
+	if (status !== 'ACTIVE' && status !== 'INACTIVE' && status !== 'DRAFT') {
+		return NextResponse.json({ error: "Invalid status. Must be 'ACTIVE', 'INACTIVE', or 'DRAFT'" }, { status: 400 });
 	}
 
 	// Verify tenant belongs to user's organization

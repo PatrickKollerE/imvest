@@ -71,7 +71,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 					{data.evaluations.map((e) => (
 						<div key={e.id} className="border rounded p-3 flex items-center justify-between">
 							<div>
-								<div className="text-sm text-gray-500">{new Date(e.createdAt).toLocaleString()}</div>
+								<div className="text-sm text-gray-500">{new Date(e.createdAt).toISOString().replace('T', ' ').split('.')[0]}</div>
 								<div className="text-sm">{t('evaluate.cashflow')}: {formatCurrency(e.monthlyCashflowCents, locale as string)} — {t('roi.grossYield')} {e.grossYieldPct.toFixed(1)}%</div>
 							</div>
 							<span className={`text-xs px-2 py-1 rounded text-white font-medium ${

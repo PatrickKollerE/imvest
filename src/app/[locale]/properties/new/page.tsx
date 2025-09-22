@@ -8,6 +8,7 @@ export default function NewPropertyPage({ params }: { params: Promise<{ locale: 
 	const router = useRouter();
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [validationErrors, setValidationErrors] = useState<string[]>([]);
 	const [locale, setLocale] = useState<string>('en');
 	const t = useTranslations();
 	
@@ -15,12 +16,65 @@ export default function NewPropertyPage({ params }: { params: Promise<{ locale: 
 		params.then(({ locale }) => setLocale(locale));
 	}, [params]);
 
+	// Validation function to check required fields
+	function validatePropertyForm(formData: FormData): string[] {
+		const errors: string[] = [];
+		
+		// Required fields validation
+		if (!formData.get("address") || (formData.get("address") as string).trim() === '') {
+			errors.push(t('validation.addressRequired'));
+		}
+		if (!formData.get("city") || (formData.get("city") as string).trim() === '') {
+			errors.push(t('validation.cityRequired'));
+		}
+		if (!formData.get("postalCode") || (formData.get("postalCode") as string).trim() === '') {
+			errors.push(t('validation.postalCodeRequired'));
+		}
+		
+		// Financial validation - at least one financial field should be provided
+		const purchasePrice = formData.get("purchasePrice");
+		const marketValue = formData.get("marketValue");
+		const equity = formData.get("equity");
+		const loanPrincipal = formData.get("loanPrincipal");
+		
+		if (!purchasePrice && !marketValue && !equity && !loanPrincipal) {
+			errors.push(t('validation.financialInfoRequired'));
+		}
+		
+		// Loan validation - if loan fields are provided, they should be complete
+		const interestRate = formData.get("interestRate");
+		const amortizationRate = formData.get("amortizationRate");
+		
+		if ((loanPrincipal && loanPrincipal !== '') || (interestRate && interestRate !== '') || (amortizationRate && amortizationRate !== '')) {
+			if (!loanPrincipal || loanPrincipal === '') {
+				errors.push(t('validation.loanPrincipalRequired'));
+			}
+			if (!interestRate || interestRate === '') {
+				errors.push(t('validation.interestRateRequired'));
+			}
+			if (!amortizationRate || amortizationRate === '') {
+				errors.push(t('validation.amortizationRateRequired'));
+			}
+		}
+		
+		return errors;
+	}
+
 	async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();
 		setError(null);
+		setValidationErrors([]);
 		setLoading(true);
 
 		const formData = new FormData(e.currentTarget);
+		
+		// Validate form data
+		const validationErrors = validatePropertyForm(formData);
+		if (validationErrors.length > 0) {
+			setValidationErrors(validationErrors);
+			setLoading(false);
+			return;
+		}
 		const data = {
 			address: formData.get("address"),
 			city: formData.get("city"),
@@ -32,6 +86,7 @@ export default function NewPropertyPage({ params }: { params: Promise<{ locale: 
 			loanPrincipalCents: formData.get("loanPrincipal") ? Number(formData.get("loanPrincipal")) * 100 : null,
 			interestRatePct: formData.get("interestRate") ? Number(formData.get("interestRate")) : null,
 			amortizationRatePct: formData.get("amortizationRate") ? Number(formData.get("amortizationRate")) : null,
+			buyDate: formData.get("buyDate") || null,
 		};
 
 		try {
@@ -104,6 +159,15 @@ export default function NewPropertyPage({ params }: { params: Promise<{ locale: 
 								className="w-full border rounded px-3 py-2"
 								placeholder="80"
 							/>
+						</div>
+						<div>
+							<label className="block text-sm font-medium mb-1">{t('properties.buyDate')}</label>
+							<input
+								name="buyDate"
+								type="date"
+								className="w-full border rounded px-3 py-2"
+							/>
+							<p className="text-xs text-gray-500 mt-1">{t('properties.buyDateHelp')}</p>
 						</div>
 					</div>
 				</div>
@@ -191,6 +255,17 @@ export default function NewPropertyPage({ params }: { params: Promise<{ locale: 
 					</button>
 				</div>
 
+				{validationErrors.length > 0 && (
+					<div className="bg-red-50 border border-red-200 rounded p-4">
+						<h4 className="text-red-800 font-medium mb-2">{t('validation.title')}</h4>
+						<ul className="list-disc list-inside text-red-600 space-y-1">
+							{validationErrors.map((error, index) => (
+								<li key={index}>{error}</li>
+							))}
+						</ul>
+					</div>
+				)}
+				
 				{error && (
 					<div className="bg-red-50 border border-red-200 rounded p-4">
 						<p className="text-red-600">{error}</p>

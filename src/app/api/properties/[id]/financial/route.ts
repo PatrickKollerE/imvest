@@ -30,9 +30,13 @@ export async function GET(
 	}
 
 	// Calculate date range
-	const dateFilter: { gte?: Date } = {};
+	const dateFilter: { gte?: Date; lte?: Date } = {};
+	const now = new Date();
+	
+	// Always limit to current date to avoid showing future records
+	dateFilter.lte = now;
+	
 	if (timeRange !== 'all') {
-		const now = new Date();
 		let startDate: Date;
 		
 		if (timeRange === 'ytd') {
@@ -52,7 +56,7 @@ export async function GET(
 			prisma.income.aggregate({
 				where: { 
 					propertyId,
-					...(Object.keys(dateFilter).length > 0 ? { date: dateFilter } : {})
+					date: dateFilter
 				},
 				_sum: { amountCents: true },
 				_count: true,
@@ -60,7 +64,7 @@ export async function GET(
 			prisma.expense.aggregate({
 				where: { 
 					propertyId,
-					...(Object.keys(dateFilter).length > 0 ? { date: dateFilter } : {})
+					date: dateFilter
 				},
 				_sum: { amountCents: true },
 				_count: true,
@@ -68,7 +72,7 @@ export async function GET(
 			prisma.income.findMany({
 				where: { 
 					propertyId,
-					...(Object.keys(dateFilter).length > 0 ? { date: dateFilter } : {})
+					date: dateFilter
 				},
 				orderBy: { date: "desc" },
 				take: 5,
@@ -76,7 +80,7 @@ export async function GET(
 			prisma.expense.findMany({
 				where: { 
 					propertyId,
-					...(Object.keys(dateFilter).length > 0 ? { date: dateFilter } : {})
+					date: dateFilter
 				},
 				orderBy: { date: "desc" },
 				take: 5,

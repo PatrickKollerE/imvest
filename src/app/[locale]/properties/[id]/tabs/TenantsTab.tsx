@@ -12,7 +12,7 @@ type Tenant = {
 	leaseEnd: Date | null;
 	baseRentCents: number | null;
 	contractUrl: string | null;
-	status: 'ACTIVE' | 'INACTIVE';
+	status: 'ACTIVE' | 'INACTIVE' | 'DRAFT';
 };
 
 type TenantsTabProps = {
@@ -24,6 +24,7 @@ export default function TenantsTab({ propertyId, tenants }: TenantsTabProps) {
 	const [showForm, setShowForm] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [validationErrors, setValidationErrors] = useState<string[]>([]);
 	const [deletingTenant, setDeletingTenant] = useState<string | null>(null);
 	const [updatingTenant, setUpdatingTenant] = useState<string | null>(null);
 	const [editingTenant, setEditingTenant] = useState<string | null>(null);
@@ -44,12 +45,48 @@ export default function TenantsTab({ propertyId, tenants }: TenantsTabProps) {
 	});
 	const t = useTranslations();
 
+	// Validation function to check required fields for tenant
+	function validateTenantForm(formData: FormData): string[] {
+		const errors: string[] = [];
+		
+		// Required fields validation
+		if (!formData.get("name") || (formData.get("name") as string).trim() === '') {
+			errors.push(t('validation.tenantNameRequired'));
+		}
+		if (!formData.get("baseRent") || Number(formData.get("baseRent")) <= 0) {
+			errors.push(t('validation.baseRentRequired'));
+		}
+		if (!formData.get("leaseStart")) {
+			errors.push(t('validation.leaseStartRequired'));
+		}
+		
+		// Contact information validation - at least one contact method is required
+		const contactEmail = formData.get("contactEmail");
+		const contactPhone = formData.get("contactPhone");
+		
+		if ((!contactEmail || (contactEmail as string).trim() === '') && 
+			(!contactPhone || (contactPhone as string).trim() === '')) {
+			errors.push(t('validation.contactInfoRequired'));
+		}
+		
+		return errors;
+	}
+
 	async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();
 		setError(null);
+		setValidationErrors([]);
 		setLoading(true);
 
 		const formData = new FormData(e.currentTarget);
+		
+		// Validate form data
+		const validationErrors = validateTenantForm(formData);
+		if (validationErrors.length > 0) {
+			setValidationErrors(validationErrors);
+			setLoading(false);
+			return;
+		}
 		const data = {
 			name: formData.get("name"),
 			contactEmail: formData.get("contactEmail"),
@@ -105,7 +142,7 @@ export default function TenantsTab({ propertyId, tenants }: TenantsTabProps) {
 		}
 	}
 
-	async function handleToggleTenantStatus(tenantId: string, currentStatus: 'ACTIVE' | 'INACTIVE', tenantName: string) {
+	async function handleToggleTenantStatus(tenantId: string, currentStatus: 'ACTIVE' | 'INACTIVE' | 'DRAFT', tenantName: string) {
 		const newStatus = currentStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
 		const action = newStatus === 'INACTIVE' ? t('tenants.deactivate') : t('tenants.activate');
 		
@@ -207,10 +244,43 @@ export default function TenantsTab({ propertyId, tenants }: TenantsTabProps) {
 		setError(null);
 	}
 
+	// Validation function for edit form
+	function validateEditTenantForm(data: typeof editFormData): string[] {
+		const errors: string[] = [];
+		
+		// Required fields validation
+		if (!data.name || data.name.trim() === '') {
+			errors.push(t('validation.tenantNameRequired'));
+		}
+		if (!data.baseRent || Number(data.baseRent) <= 0) {
+			errors.push(t('validation.baseRentRequired'));
+		}
+		if (!data.leaseStart) {
+			errors.push(t('validation.leaseStartRequired'));
+		}
+		
+		// Contact information validation - at least one contact method is required
+		if ((!data.contactEmail || data.contactEmail.trim() === '') && 
+			(!data.contactPhone || data.contactPhone.trim() === '')) {
+			errors.push(t('validation.contactInfoRequired'));
+		}
+		
+		return errors;
+	}
+
 	async function handleEditSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();
 		setError(null);
+		setValidationErrors([]);
 		setLoading(true);
+
+		// Validate form data
+		const validationErrors = validateEditTenantForm(editFormData);
+		if (validationErrors.length > 0) {
+			setValidationErrors(validationErrors);
+			setLoading(false);
+			return;
+		}
 
 		const data = {
 			tenantId: editingTenant,
@@ -257,56 +327,83 @@ export default function TenantsTab({ propertyId, tenants }: TenantsTabProps) {
 
 			{showForm && (
 				<form onSubmit={handleSubmit} className="mb-6 p-4 border rounded-lg bg-gray-50">
+					{validationErrors.length > 0 && (
+						<div className="bg-red-50 border border-red-200 rounded p-4 mb-4">
+							<h4 className="text-red-800 font-medium mb-2">{t('validation.title')}</h4>
+							<ul className="list-disc list-inside text-red-600 space-y-1">
+								{validationErrors.map((error, index) => (
+									<li key={index}>{error}</li>
+								))}
+							</ul>
+						</div>
+					)}
+					
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 						<div>
-							<label className="block text-sm font-medium mb-1">{t('tenants.name')}</label>
+							<label className="block text-sm font-medium mb-1">
+								{t('tenants.name')} <span className="text-red-500">*</span>
+							</label>
 							<input
 								name="name"
 								type="text"
 								required
-								className="w-full border rounded px-3 py-2"
+								className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 							/>
 						</div>
 						<div>
-							<label className="block text-sm font-medium mb-1">{t('tenants.email')}</label>
+							<label className="block text-sm font-medium mb-1">
+								{t('tenants.email')} <span className="text-red-500">*</span>
+							</label>
 							<input
 								name="contactEmail"
 								type="email"
-								className="w-full border rounded px-3 py-2"
+								className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 							/>
+							<p className="text-xs text-gray-500 mt-1">{t('validation.emailOrPhone')}</p>
 						</div>
 						<div>
-							<label className="block text-sm font-medium mb-1">{t('tenants.phone')}</label>
+							<label className="block text-sm font-medium mb-1">
+								{t('tenants.phone')} <span className="text-red-500">*</span>
+							</label>
 							<input
 								name="contactPhone"
 								type="tel"
-								className="w-full border rounded px-3 py-2"
+								className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 							/>
+							<p className="text-xs text-gray-500 mt-1">{t('validation.emailOrPhone')}</p>
 						</div>
 						<div>
-							<label className="block text-sm font-medium mb-1">{t('tenants.baseRent')} ({t('common.currencySymbol')})</label>
+							<label className="block text-sm font-medium mb-1">
+								{t('tenants.baseRent')} ({t('common.currencySymbol')}) <span className="text-red-500">*</span>
+							</label>
 							<input
 								name="baseRent"
 								type="number"
 								step="0.01"
-								className="w-full border rounded px-3 py-2"
+								min="0"
+								className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 							/>
 						</div>
 						<div>
-							<label className="block text-sm font-medium mb-1">{t('tenants.leaseStart')}</label>
+							<label className="block text-sm font-medium mb-1">
+								{t('tenants.leaseStart')} <span className="text-red-500">*</span>
+							</label>
 							<input
 								name="leaseStart"
 								type="date"
-								className="w-full border rounded px-3 py-2"
+								className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 							/>
 						</div>
 						<div>
-							<label className="block text-sm font-medium mb-1">{t('tenants.leaseEnd')}</label>
+							<label className="block text-sm font-medium mb-1">
+								{t('tenants.leaseEnd')} <span className="text-gray-400">({t('validation.optional')})</span>
+							</label>
 							<input
 								name="leaseEnd"
 								type="date"
-								className="w-full border rounded px-3 py-2"
+								className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 							/>
+							<p className="text-xs text-gray-500 mt-1">{t('validation.openEndedLease')}</p>
 						</div>
 					</div>
 					<div className="mt-4 flex gap-2">
@@ -362,10 +459,21 @@ export default function TenantsTab({ propertyId, tenants }: TenantsTabProps) {
 						return (
 							<div key={tenant.id} className="border rounded p-4 bg-blue-50 border-blue-300">
 								<form onSubmit={handleEditSubmit} className="space-y-4">
+									{validationErrors.length > 0 && (
+										<div className="bg-red-50 border border-red-200 rounded p-4">
+											<h4 className="text-red-800 font-medium mb-2">{t('validation.title')}</h4>
+											<ul className="list-disc list-inside text-red-600 space-y-1">
+												{validationErrors.map((error, index) => (
+													<li key={index}>{error}</li>
+												))}
+											</ul>
+										</div>
+									)}
+									
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 										<div>
 											<label className="block text-sm font-medium text-gray-700 mb-1">
-												{t('tenants.name')}
+												{t('tenants.name')} <span className="text-red-500">*</span>
 											</label>
 											<input
 												type="text"
@@ -377,11 +485,12 @@ export default function TenantsTab({ propertyId, tenants }: TenantsTabProps) {
 										</div>
 										<div>
 											<label className="block text-sm font-medium text-gray-700 mb-1">
-												{t('tenants.baseRent')}
+												{t('tenants.baseRent')} ({t('common.currencySymbol')}) <span className="text-red-500">*</span>
 											</label>
 											<input
 												type="number"
 												step="0.01"
+												min="0"
 												value={editFormData.baseRent}
 												onChange={(e) => setEditFormData(prev => ({ ...prev, baseRent: e.target.value }))}
 												className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -389,7 +498,7 @@ export default function TenantsTab({ propertyId, tenants }: TenantsTabProps) {
 										</div>
 										<div>
 											<label className="block text-sm font-medium text-gray-700 mb-1">
-												{t('tenants.contactEmail')}
+												{t('tenants.contactEmail')} <span className="text-red-500">*</span>
 											</label>
 											<input
 												type="email"
@@ -397,10 +506,11 @@ export default function TenantsTab({ propertyId, tenants }: TenantsTabProps) {
 												onChange={(e) => setEditFormData(prev => ({ ...prev, contactEmail: e.target.value }))}
 												className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 											/>
+											<p className="text-xs text-gray-500 mt-1">{t('validation.emailOrPhone')}</p>
 										</div>
 										<div>
 											<label className="block text-sm font-medium text-gray-700 mb-1">
-												{t('tenants.contactPhone')}
+												{t('tenants.contactPhone')} <span className="text-red-500">*</span>
 											</label>
 											<input
 												type="tel"
@@ -408,10 +518,11 @@ export default function TenantsTab({ propertyId, tenants }: TenantsTabProps) {
 												onChange={(e) => setEditFormData(prev => ({ ...prev, contactPhone: e.target.value }))}
 												className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 											/>
+											<p className="text-xs text-gray-500 mt-1">{t('validation.emailOrPhone')}</p>
 										</div>
 										<div>
 											<label className="block text-sm font-medium text-gray-700 mb-1">
-												{t('tenants.leaseStart')}
+												{t('tenants.leaseStart')} <span className="text-red-500">*</span>
 											</label>
 											<input
 												type="date"
@@ -422,7 +533,7 @@ export default function TenantsTab({ propertyId, tenants }: TenantsTabProps) {
 										</div>
 										<div>
 											<label className="block text-sm font-medium text-gray-700 mb-1">
-												{t('tenants.leaseEnd')}
+												{t('tenants.leaseEnd')} <span className="text-gray-400">({t('validation.optional')})</span>
 											</label>
 											<input
 												type="date"
@@ -430,6 +541,7 @@ export default function TenantsTab({ propertyId, tenants }: TenantsTabProps) {
 												onChange={(e) => setEditFormData(prev => ({ ...prev, leaseEnd: e.target.value }))}
 												className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 											/>
+											<p className="text-xs text-gray-500 mt-1">{t('validation.openEndedLease')}</p>
 										</div>
 									</div>
 									
@@ -458,7 +570,15 @@ export default function TenantsTab({ propertyId, tenants }: TenantsTabProps) {
 												</button>
 											)}
 											<span className="text-sm text-gray-600 flex items-center">
-												{t('tenants.currentStatus')}: <span className={`ml-1 font-medium ${tenant.status === 'ACTIVE' ? 'text-green-600' : 'text-gray-600'}`}>{tenant.status === 'ACTIVE' ? t('tenants.active') : t('tenants.inactive')}</span>
+												{t('tenants.currentStatus')}: <span className={`ml-1 font-medium ${
+													tenant.status === 'ACTIVE' ? 'text-green-600' : 
+													tenant.status === 'DRAFT' ? 'text-yellow-600' : 
+													'text-gray-600'
+												}`}>
+													{tenant.status === 'ACTIVE' ? t('tenants.active') : 
+													 tenant.status === 'DRAFT' ? t('tenants.draft') : 
+													 t('tenants.inactive')}
+												</span>
 											</span>
 										</div>
 									</div>
@@ -505,7 +625,9 @@ export default function TenantsTab({ propertyId, tenants }: TenantsTabProps) {
 									? 'border-green-500 bg-green-50 shadow-md hover:bg-green-100' 
 									: tenant.status === 'INACTIVE' 
 										? 'border-gray-300 bg-gray-50 opacity-75 hover:opacity-90' 
-										: 'border-gray-300 hover:bg-gray-50'
+										: tenant.status === 'DRAFT'
+											? 'border-yellow-300 bg-yellow-50 hover:bg-yellow-100'
+											: 'border-gray-300 hover:bg-gray-50'
 							} ${isEditing ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}
 						>
 							<div className="flex justify-between items-start">
@@ -522,6 +644,11 @@ export default function TenantsTab({ propertyId, tenants }: TenantsTabProps) {
 												{t('tenants.inactive')}
 											</span>
 										)}
+										{tenant.status === 'DRAFT' && (
+											<span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full font-medium">
+												{t('tenants.draft')}
+											</span>
+										)}
 									</div>
 									{tenant.contactEmail && (
 										<p className="text-sm text-gray-600">{tenant.contactEmail}</p>
@@ -532,8 +659,8 @@ export default function TenantsTab({ propertyId, tenants }: TenantsTabProps) {
 									{tenant.leaseStart && (
 										<div className="mt-2">
 											<p className="text-sm text-gray-500">
-												{t('tenants.leasePeriod')}: {new Date(tenant.leaseStart).toLocaleDateString()} 
-												{tenant.leaseEnd ? ` - ${new Date(tenant.leaseEnd).toLocaleDateString()}` : ` (${t('tenants.openEnded')})`}
+												{t('tenants.leasePeriod')}: {new Date(tenant.leaseStart).toISOString().split('T')[0]} 
+												{tenant.leaseEnd ? ` - ${new Date(tenant.leaseEnd).toISOString().split('T')[0]}` : ` (${t('tenants.openEnded')})`}
 											</p>
 											{getLeaseStatusText(tenant) && (
 												<p className={`text-xs font-medium ${

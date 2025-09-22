@@ -90,6 +90,8 @@
     "city": "City",
     "postalCode": "Postal Code",
     "size": "Size (m²)",
+    "buyDate": "Buy Date",
+    "buyDateHelp": "Date when the property was purchased. Used for calculating loan expenses.",
     "purchasePrice": "Purchase Price",
     "marketValue": "Market Value",
     "equity": "Equity",
@@ -135,6 +137,7 @@
     "activate": "Activate",
     "currentlyActive": "Active",
     "inactive": "Inactive",
+    "draft": "Draft",
     "leasePeriod": "Lease Period",
     "activePeriod": "Currently in lease period",
     "openEnded": "open-ended",
@@ -260,5 +263,22 @@
     "october": "October",
     "november": "November",
     "december": "December"
+  },
+  "validation": {
+    "title": "Please correct the following errors:",
+    "addressRequired": "Address is required",
+    "cityRequired": "City is required",
+    "postalCodeRequired": "Postal code is required",
+    "financialInfoRequired": "At least one financial value (purchase price, market value, equity, or loan principal) is required",
+    "loanPrincipalRequired": "Loan principal is required when interest rate or amortization rate is provided",
+    "interestRateRequired": "Interest rate is required when loan information is provided",
+    "amortizationRateRequired": "Amortization rate is required when loan information is provided",
+    "tenantNameRequired": "Tenant name is required",
+    "baseRentRequired": "Base rent must be greater than 0",
+    "leaseStartRequired": "Lease start date is required",
+    "contactInfoRequired": "At least one contact information (email or phone) is required",
+    "emailOrPhone": "At least one contact information is required",
+    "optional": "optional",
+    "openEndedLease": "Leave empty for open-ended lease"
   }
 }

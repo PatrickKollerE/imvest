@@ -16,6 +16,7 @@ type Property = {
 	loanPrincipalCents: number | null;
 	interestRatePct: number | null;
 	amortizationRatePct: number | null;
+	buyDate: Date | null;
 };
 
 type EditPropertyFormProps = {
@@ -35,17 +36,72 @@ export default function EditPropertyForm({ property, locale }: EditPropertyFormP
 		loanPrincipal: property.loanPrincipalCents ? (property.loanPrincipalCents / 100).toString() : '',
 		interestRate: property.interestRatePct?.toString() || '',
 		amortizationRate: property.amortizationRatePct?.toString() || '',
+		buyDate: property.buyDate ? new Date(property.buyDate).toISOString().split('T')[0] : '',
 	});
 	const [isLoading, setIsLoading] = useState(false);
 	const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+	const [validationErrors, setValidationErrors] = useState<string[]>([]);
 	
 	const t = useTranslations();
 	const router = useRouter();
+
+	// Validation function to check required fields
+	function validatePropertyForm(data: typeof formData): string[] {
+		const errors: string[] = [];
+		
+		// Required fields validation
+		if (!data.address || data.address.trim() === '') {
+			errors.push(t('validation.addressRequired'));
+		}
+		if (!data.city || data.city.trim() === '') {
+			errors.push(t('validation.cityRequired'));
+		}
+		if (!data.postalCode || data.postalCode.trim() === '') {
+			errors.push(t('validation.postalCodeRequired'));
+		}
+		
+		// Financial validation - at least one financial field should be provided
+		const purchasePrice = data.purchasePrice;
+		const marketValue = data.marketValue;
+		const equity = data.equity;
+		const loanPrincipal = data.loanPrincipal;
+		
+		if (!purchasePrice && !marketValue && !equity && !loanPrincipal) {
+			errors.push(t('validation.financialInfoRequired'));
+		}
+		
+		// Loan validation - if loan fields are provided, they should be complete
+		const interestRate = data.interestRate;
+		const amortizationRate = data.amortizationRate;
+		
+		if ((loanPrincipal && loanPrincipal !== '') || (interestRate && interestRate !== '') || (amortizationRate && amortizationRate !== '')) {
+			if (!loanPrincipal || loanPrincipal === '') {
+				errors.push(t('validation.loanPrincipalRequired'));
+			}
+			if (!interestRate || interestRate === '') {
+				errors.push(t('validation.interestRateRequired'));
+			}
+			if (!amortizationRate || amortizationRate === '') {
+				errors.push(t('validation.amortizationRateRequired'));
+			}
+		}
+		
+		return errors;
+	}
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setIsLoading(true);
 		setMessage(null);
+		setValidationErrors([]);
+
+		// Validate form data
+		const validationErrors = validatePropertyForm(formData);
+		if (validationErrors.length > 0) {
+			setValidationErrors(validationErrors);
+			setIsLoading(false);
+			return;
+		}
 
 		try {
 			const response = await fetch(`/api/properties/${property.id}`, {
@@ -64,6 +120,7 @@ export default function EditPropertyForm({ property, locale }: EditPropertyFormP
 					loanPrincipalCents: formData.loanPrincipal ? Number(formData.loanPrincipal) * 100 : null,
 					interestRatePct: formData.interestRate ? Number(formData.interestRate) : null,
 					amortizationRatePct: formData.amortizationRate ? Number(formData.amortizationRate) : null,
+					buyDate: formData.buyDate || null,
 				}),
 			});
 
@@ -96,6 +153,17 @@ export default function EditPropertyForm({ property, locale }: EditPropertyFormP
 	return (
 		<div className="max-w-2xl">
 			<form onSubmit={handleSubmit} className="space-y-6">
+				{validationErrors.length > 0 && (
+					<div className="bg-red-50 border border-red-200 rounded p-4">
+						<h4 className="text-red-800 font-medium mb-2">{t('validation.title')}</h4>
+						<ul className="list-disc list-inside text-red-600 space-y-1">
+							{validationErrors.map((error, index) => (
+								<li key={index}>{error}</li>
+							))}
+						</ul>
+					</div>
+				)}
+				
 				{message && (
 					<div className={`p-4 rounded ${
 						message.type === 'success' 
@@ -166,6 +234,21 @@ export default function EditPropertyForm({ property, locale }: EditPropertyFormP
 							step="0.1"
 							className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
 						/>
+					</div>
+
+					<div>
+						<label htmlFor="buyDate" className="block text-sm font-medium text-gray-700 mb-1">
+							{t('properties.buyDate')}
+						</label>
+						<input
+							type="date"
+							id="buyDate"
+							name="buyDate"
+							value={formData.buyDate}
+							onChange={handleInputChange}
+							className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+						/>
+						<p className="text-xs text-gray-500 mt-1">{t('properties.buyDateHelp')}</p>
 					</div>
 
 					<div>

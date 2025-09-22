@@ -90,6 +90,8 @@
     "city": "Stadt",
     "postalCode": "Postleitzahl",
     "size": "Größe (m²)",
+    "buyDate": "Kaufdatum",
+    "buyDateHelp": "Datum wann die Immobilie gekauft wurde. Wird für die Berechnung der Darlehensausgaben verwendet.",
     "purchasePrice": "Kaufpreis",
     "marketValue": "Marktwert",
     "equity": "Eigenkapital",
@@ -135,6 +137,7 @@
     "activate": "Aktivieren",
     "currentlyActive": "Aktiv",
     "inactive": "Inaktiv",
+    "draft": "Entwurf",
     "leasePeriod": "Mietzeitraum",
     "activePeriod": "Aktuell im Mietzeitraum",
     "openEnded": "unbefristet",
@@ -260,5 +263,22 @@
     "october": "Oktober",
     "november": "November",
     "december": "Dezember"
+  },
+  "validation": {
+    "title": "Bitte korrigieren Sie folgende Fehler:",
+    "addressRequired": "Adresse ist erforderlich",
+    "cityRequired": "Stadt ist erforderlich",
+    "postalCodeRequired": "Postleitzahl ist erforderlich",
+    "financialInfoRequired": "Mindestens ein Finanzwert (Kaufpreis, Marktwert, Eigenkapital oder Darlehenssumme) ist erforderlich",
+    "loanPrincipalRequired": "Darlehenssumme ist erforderlich, wenn Zinssatz oder Tilgungssatz angegeben wird",
+    "interestRateRequired": "Zinssatz ist erforderlich, wenn Darlehensinformationen angegeben werden",
+    "amortizationRateRequired": "Tilgungssatz ist erforderlich, wenn Darlehensinformationen angegeben werden",
+    "tenantNameRequired": "Mieter-Name ist erforderlich",
+    "baseRentRequired": "Grundmiete muss größer als 0 sein",
+    "leaseStartRequired": "Mietbeginn ist erforderlich",
+    "contactInfoRequired": "Mindestens eine Kontaktinformation (E-Mail oder Telefon) ist erforderlich",
+    "emailOrPhone": "Mindestens eine Kontaktinformation ist erforderlich",
+    "optional": "optional",
+    "openEndedLease": "Leer lassen für unbefristeten Mietvertrag"
   }
 }

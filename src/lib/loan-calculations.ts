@@ -114,3 +114,33 @@ export function generateNext12MonthsLoanExpenses(
   
   return generateLoanExpenses(propertyId, loanData, startDate, endDate);
 }
+
+/**
+ * Generate loan expenses from buy date until today (or current date)
+ */
+export function generateLoanExpensesFromBuyDate(
+  propertyId: string,
+  loanData: PropertyLoanData,
+  buyDate: Date
+): Array<{
+  propertyId: string;
+  date: Date;
+  amountCents: number;
+  category: ExpenseCategory;
+  note: string;
+}> {
+  const today = new Date();
+  today.setHours(23, 59, 59, 999); // End of today
+  
+  // Start from the first day of the month after buy date
+  const startDate = new Date(buyDate);
+  startDate.setDate(1); // First day of the month
+  startDate.setMonth(startDate.getMonth() + 1); // Next month
+  
+  // Only generate if buy date is in the past
+  if (startDate > today) {
+    return [];
+  }
+  
+  return generateLoanExpenses(propertyId, loanData, startDate, today);
+}

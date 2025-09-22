@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId, getFirstOrganizationIdForUser } from "@/lib/auth-helpers";
-import { generateNext12MonthsLoanExpenses } from "@/lib/loan-calculations";
+import { generateNext12MonthsLoanExpenses, generateLoanExpensesFromBuyDate } from "@/lib/loan-calculations";
 
 export async function GET() {
 	const userId = await getCurrentUserId();
@@ -16,12 +16,22 @@ export async function GET() {
 			include: {
 				tenants: true,
 				incomes: { 
+					where: {
+						date: {
+							lte: new Date(), // Only show incomes up to current date
+						},
+					},
 					select: { 
 						amountCents: true, 
 						date: true 
 					} 
 				},
 				expenses: { 
+					where: {
+						date: {
+							lte: new Date(), // Only show expenses up to current date
+						},
+					},
 					select: { 
 						amountCents: true, 
 						date: true 
@@ -57,6 +67,7 @@ export async function POST(req: Request) {
 		loanPrincipalCents,
 		interestRatePct,
 		amortizationRatePct,
+		buyDate,
 	} = body;
 
 	try {
@@ -73,6 +84,7 @@ export async function POST(req: Request) {
 				loanPrincipalCents,
 				interestRatePct,
 				amortizationRatePct,
+				buyDate: buyDate ? new Date(buyDate) : null,
 			},
 		});
 
@@ -84,7 +96,14 @@ export async function POST(req: Request) {
 				amortizationRatePct,
 			};
 			
-			const loanExpenses = generateNext12MonthsLoanExpenses(property.id, loanData);
+			let loanExpenses;
+			if (buyDate) {
+				// Generate from buy date until today
+				loanExpenses = generateLoanExpensesFromBuyDate(property.id, loanData, new Date(buyDate));
+			} else {
+				// Fallback to next 12 months if no buy date provided
+				loanExpenses = generateNext12MonthsLoanExpenses(property.id, loanData);
+			}
 			
 			if (loanExpenses.length > 0) {
 				await prisma.expense.createMany({

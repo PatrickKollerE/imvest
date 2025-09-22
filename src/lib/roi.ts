@@ -49,7 +49,9 @@ export function evaluateInvestment(input: EvaluationInput): EvaluationOutput {
 	const approxMonthlyNet = input.expectedMonthlyRentCents - otherCosts - firstMonthInterest;
 	const netYieldPct = ((approxMonthlyNet * 12) / input.purchasePriceCents) * 100;
 
-	const monthlyCashflowCents = input.expectedMonthlyRentCents - otherCosts - monthlyDebtServiceCents;
+	// For cashflow calculation, only subtract interest (not principal payments)
+	const monthlyInterestCents = Math.round(loanPrincipalCents * monthlyRate(input.interestRatePct));
+	const monthlyCashflowCents = input.expectedMonthlyRentCents - otherCosts - monthlyInterestCents;
 
 	let recommendation: EvaluationOutput["recommendation"] = "YELLOW";
 	if (monthlyCashflowCents >= 0 && netYieldPct >= 3) recommendation = "GREEN";

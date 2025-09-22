@@ -47,6 +47,7 @@ enum Recommendation {
 enum TenantStatus {
 	ACTIVE
 	INACTIVE
+	DRAFT
 }
 
 // ---------- Multi-tenant core ----------
@@ -104,6 +105,7 @@ model Property {
 	loanPrincipalCents Int?
 	interestRatePct    Float?       // annual nominal
 	amortizationRatePct Float?       // annual repayment percent
+	buyDate          DateTime?      // Date when property was purchased
 	createdAt        DateTime       @default(now())
 	updatedAt        DateTime       @updatedAt
 
