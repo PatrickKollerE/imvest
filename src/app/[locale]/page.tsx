@@ -3,20 +3,38 @@ import { getCurrentUserId, getFirstOrganizationIdForUser } from "@/lib/auth-help
 import { formatCurrency } from "@/lib/currency";
 import { getTranslations } from 'next-intl/server';
 import Link from "next/link";
+import DashboardPieCharts from "@/components/DashboardPieCharts";
 
 async function getData() {
 	const userId = await getCurrentUserId();
 	if (!userId) return null;
 	const organizationId = await getFirstOrganizationIdForUser(userId);
-	if (!organizationId) return { organizationId: null, totals: null, evaluations: [] };
+	if (!organizationId) return { organizationId: null, totals: null, evaluations: [], propertyData: [] };
 
-	const [incomeAgg, expenseAgg, evaluations] = await Promise.all([
+	// Get current month date range
+	const now = new Date();
+	const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+	const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+	const [incomeAgg, expenseAgg, evaluations, properties] = await Promise.all([
 		prisma.income.aggregate({
-			where: { property: { organizationId: organizationId } },
+			where: { 
+				property: { organizationId: organizationId },
+				date: {
+					gte: startOfMonth,
+					lte: endOfMonth,
+				},
+			},
 			_sum: { amountCents: true },
 		}),
 		prisma.expense.aggregate({
-			where: { property: { organizationId: organizationId } },
+			where: { 
+				property: { organizationId: organizationId },
+				date: {
+					gte: startOfMonth,
+					lte: endOfMonth,
+				},
+			},
 			_sum: { amountCents: true },
 		}),
 		prisma.evaluation.findMany({
@@ -24,12 +42,55 @@ async function getData() {
 			orderBy: { createdAt: "desc" },
 			take: 5,
 		}),
+		prisma.property.findMany({
+			where: { organizationId },
+			select: {
+				id: true,
+				address: true,
+				city: true,
+				incomes: {
+					where: {
+						date: {
+							gte: startOfMonth,
+							lte: endOfMonth,
+						},
+					},
+					select: { amountCents: true },
+				},
+				expenses: {
+					where: {
+						date: {
+							gte: startOfMonth,
+							lte: endOfMonth,
+						},
+					},
+					select: { amountCents: true },
+				},
+			},
+		}),
 	]);
 
 	const income = incomeAgg._sum.amountCents ?? 0;
 	const expenses = expenseAgg._sum.amountCents ?? 0;
 	const cashflow = income - expenses;
-	return { organizationId, totals: { income, expenses, cashflow }, evaluations };
+
+	// Calculate property-level data for pie charts
+	const propertyData = properties.map(property => {
+		const monthlyIncome = property.incomes.reduce((sum, inc) => sum + inc.amountCents, 0);
+		const monthlyExpenses = property.expenses.reduce((sum, exp) => sum + exp.amountCents, 0);
+		const monthlyCashflow = monthlyIncome - monthlyExpenses;
+		
+		return {
+			id: property.id,
+			address: property.address,
+			city: property.city,
+			monthlyIncome,
+			monthlyExpenses,
+			monthlyCashflow,
+		};
+	});
+
+	return { organizationId, totals: { income, expenses, cashflow }, evaluations, propertyData };
 }
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
@@ -65,6 +126,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 					</div>
 				</div>
 			</div>
+			<DashboardPieCharts properties={data.propertyData} locale={locale} />
+			
 			<div>
 				<h2 className="text-lg font-medium mb-2">{t('dashboard.recentEvaluations')}</h2>
 				<div className="space-y-2">
