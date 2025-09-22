@@ -1,0 +1,244 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Enums ----------
+enum Role {
+	OWNER
+	ADMIN
+	MEMBER
+}
+
+enum ExpenseCategory {
+	MAINTENANCE
+	INSURANCE
+	UTILITIES
+	TAX
+	OTHER
+}
+
+enum IncomeType {
+	RENT
+	OTHER
+}
+
+enum AllocationMethod {
+	SQUARE_METERS
+	TENANTS
+}
+
+enum Recommendation {
+	GREEN
+	YELLOW
+	RED
+}
+
+enum TenantStatus {
+	ACTIVE
+	INACTIVE
+}
+
+// ---------- Multi-tenant core ----------
+model Organization {
+	id          String       @id @default(cuid())
+	name        String
+	createdAt   DateTime     @default(now())
+	updatedAt   DateTime     @updatedAt
+
+	memberships Membership[]
+	properties  Property[]
+	evaluations Evaluation[]
+}
+
+model User {
+	id            String        @id @default(cuid())
+	name          String?
+	firstName     String?
+	lastName      String?
+	email         String        @unique
+	passwordHash  String
+	createdAt     DateTime      @default(now())
+	updatedAt     DateTime      @updatedAt
+
+	memberships   Membership[]
+	accounts      Account[]
+	sessions      Session[]
+	evaluations   Evaluation[]
+}
+
+model Membership {
+	userId         String
+	organizationId String
+	role           Role          @default(OWNER)
+	createdAt      DateTime      @default(now())
+
+	user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+	organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+	@@id([userId, organizationId])
+}
+
+// ---------- Domain ----------
+model Property {
+	id               String          @id @default(cuid())
+	organizationId   String
+	address          String
+	city             String?
+	postalCode       String?
+	country          String?        @default("DE")
+	sizeSqm          Float?
+	purchasePriceCents Int?
+	marketValueCents   Int?
+	equityCents        Int?
+	loanPrincipalCents Int?
+	interestRatePct    Float?       // annual nominal
+	amortizationRatePct Float?       // annual repayment percent
+	createdAt        DateTime       @default(now())
+	updatedAt        DateTime       @updatedAt
+
+	organization     Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+	tenants          Tenant[]
+	incomes          Income[]
+	expenses         Expense[]
+	utilityCosts     UtilityCost[]
+	evaluations      Evaluation[]
+
+	@@index([organizationId])
+}
+
+model Tenant {
+	id           String    @id @default(cuid())
+	propertyId   String
+	name         String
+	contactEmail String?
+	contactPhone String?
+	leaseStart   DateTime?
+	leaseEnd     DateTime?
+	baseRentCents Int?
+	contractUrl  String?
+	status       TenantStatus @default(ACTIVE)
+	createdAt    DateTime  @default(now())
+	updatedAt    DateTime  @updatedAt
+
+	property     Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+	@@index([propertyId])
+}
+
+model Income {
+	id           String     @id @default(cuid())
+	propertyId   String
+	date         DateTime
+	amountCents  Int
+	type         IncomeType @default(RENT)
+	note         String?
+
+	property     Property   @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+	@@index([propertyId, date])
+}
+
+model Expense {
+	id            String           @id @default(cuid())
+	propertyId    String
+	date          DateTime
+	amountCents   Int
+	category      ExpenseCategory  @default(OTHER)
+	note          String?
+
+	property      Property         @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+	@@index([propertyId, date])
+}
+
+model UtilityCost {
+	id                 String           @id @default(cuid())
+	propertyId         String
+	year               Int
+	totalAmountCents   Int
+	allocationMethod   AllocationMethod @default(SQUARE_METERS)
+	generatedStatementUrl String?
+	createdAt          DateTime         @default(now())
+
+	property           Property         @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+	@@unique([propertyId, year])
+}
+
+// Evaluations can be linked to a property (existing) or stand-alone simulations
+model Evaluation {
+	id                       String          @id @default(cuid())
+	organizationId           String
+	propertyId               String?
+	createdByUserId          String
+	createdAt                DateTime        @default(now())
+
+	// Inputs
+	purchasePriceCents       Int
+	expectedMonthlyRentCents Int
+	equityCents              Int?
+	interestRatePct          Float
+	loanTermYears            Int
+	monthlyOtherCostsCents   Int?            @default(0)
+
+	// Outputs (denormalized for quick dashboard reads)
+	grossYieldPct            Float
+	netYieldPct              Float
+	monthlyCashflowCents     Int
+	recommendation           Recommendation
+	resultJson               Json?
+
+	organization             Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+	property                 Property?       @relation(fields: [propertyId], references: [id])
+	createdByUser            User            @relation(fields: [createdByUserId], references: [id])
+
+	@@index([organizationId, createdAt])
+	@@index([propertyId])
+}
+
+// ---------- NextAuth models ----------
+// From Prisma official schema for NextAuth.js
+model Account {
+	id                 String  @id @default(cuid())
+	userId             String
+	type               String
+	provider           String
+	providerAccountId  String
+	refresh_token      String?
+	access_token       String?
+	expires_at         Int?
+	token_type         String?
+	scope              String?
+	id_token           String?
+	session_state      String?
+
+	user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+	@@unique([provider, providerAccountId])
+}
+
+model Session {
+	id           String   @id @default(cuid())
+	sessionToken String   @unique
+	userId       String
+	expires      DateTime
+
+	user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+	identifier String
+	token      String   @unique
+	expires    DateTime
+
+	@@unique([identifier, token])
+}
