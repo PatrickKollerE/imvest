@@ -199,6 +199,7 @@ model Evaluation {
 	createdAt                DateTime        @default(now())
 
 	// Inputs
+	calculationMethod        String?         @default("basic")
 	purchasePriceCents       Int
 	expectedMonthlyRentCents Int
 	equityCents              Int?

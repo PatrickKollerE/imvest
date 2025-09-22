@@ -20,15 +20,14 @@ export default async function middleware(req: NextRequest) {
     return intlResponse;
   }
   
-  // Check if this is a protected route (but not login/register pages)
+  // Check if this is a protected route (but not login/register/evaluate pages)
   const isLoginPage = req.nextUrl.pathname.includes('/login') || req.nextUrl.pathname.includes('/register');
+  const isEvaluatePage = req.nextUrl.pathname.startsWith('/en/evaluate') || req.nextUrl.pathname.startsWith('/de/evaluate');
   const isProtectedPath = req.nextUrl.pathname === '/en' || req.nextUrl.pathname === '/de' || 
                          req.nextUrl.pathname.startsWith('/en/properties') || 
-                         req.nextUrl.pathname.startsWith('/de/properties') ||
-                         req.nextUrl.pathname.startsWith('/en/evaluate') || 
-                         req.nextUrl.pathname.startsWith('/de/evaluate');
+                         req.nextUrl.pathname.startsWith('/de/properties');
   
-  if (isProtectedPath && !isLoginPage) {
+  if (isProtectedPath && !isLoginPage && !isEvaluatePage) {
     // Check authentication
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     
