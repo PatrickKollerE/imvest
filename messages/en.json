@@ -99,6 +99,8 @@
     "viewDetails": "View Details",
     "editProperty": "Edit Property",
     "deleteProperty": "Delete Property",
+    "propertyUpdated": "Property successfully updated",
+    "errorUpdatingProperty": "Error updating property",
     "financialSummary": "Financial Summary",
     "totalIncome": "Total Income",
     "totalExpenses": "Total Expenses",

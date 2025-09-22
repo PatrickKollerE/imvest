@@ -99,6 +99,8 @@
     "viewDetails": "Details anzeigen",
     "editProperty": "Immobilie bearbeiten",
     "deleteProperty": "Immobilie löschen",
+    "propertyUpdated": "Immobilie erfolgreich aktualisiert",
+    "errorUpdatingProperty": "Fehler beim Aktualisieren der Immobilie",
     "financialSummary": "Finanzübersicht",
     "totalIncome": "Gesamteinnahmen",
     "totalExpenses": "Gesamtausgaben",
