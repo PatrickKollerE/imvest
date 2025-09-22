@@ -89,13 +89,13 @@ export default function Navigation() {
 								</button>
 							</div>
 							<Link
-								href={`/${locale}/login`}
+								href={`/${currentLocale}/login`}
 								className="text-gray-500 hover:text-gray-700"
 							>
 								{t('navigation.login')}
 							</Link>
 							<Link
-								href={`/${locale}/register`}
+								href={`/${currentLocale}/register`}
 								className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
 							>
 								{t('navigation.register')}
@@ -110,23 +110,23 @@ export default function Navigation() {
 	return (
 		<nav className="bg-white border-b">
 			<div className="flex h-16">
-				<Link href={`/${locale}`} className="text-xl font-bold text-gray-900 px-4 sm:px-6 lg:px-8 flex items-center">
-					Imvest
-				</Link>
-				<div className="flex-1 flex justify-between items-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="hidden md:flex space-x-8">
-						<Link
-							href={`/${locale}`}
-							className={`px-3 py-2 rounded-md text-sm font-medium ${
-								pathname === `/${locale}` || pathname.endsWith(`/${locale}`)
-									? "bg-gray-100 text-gray-900"
-									: "text-gray-500 hover:text-gray-700"
-							}`}
-						>
-							{t('navigation.dashboard')}
-						</Link>
-						<Link
-							href={`/${locale}/evaluate`}
+			<Link href={`/${currentLocale}`} className="text-xl font-bold text-gray-900 px-4 sm:px-6 lg:px-8 flex items-center">
+				Imvest
+			</Link>
+			<div className="flex-1 flex justify-between items-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+				<div className="hidden md:flex space-x-8">
+					<Link
+						href={`/${currentLocale}`}
+						className={`px-3 py-2 rounded-md text-sm font-medium ${
+							pathname === `/${currentLocale}` || pathname.endsWith(`/${currentLocale}`)
+								? "bg-gray-100 text-gray-900"
+								: "text-gray-500 hover:text-gray-700"
+						}`}
+					>
+						{t('navigation.dashboard')}
+					</Link>
+					<Link
+						href={`/${currentLocale}/evaluate`}
 							className={`px-3 py-2 rounded-md text-sm font-medium ${
 								pathname.includes("/evaluate")
 									? "bg-gray-100 text-gray-900"
@@ -135,16 +135,16 @@ export default function Navigation() {
 						>
 							{t('navigation.evaluate')}
 						</Link>
-						<Link
-							href={`/${locale}/properties`}
-							className={`px-3 py-2 rounded-md text-sm font-medium ${
-								pathname.includes("/properties")
-									? "bg-gray-100 text-gray-900"
-									: "text-gray-500 hover:text-gray-700"
-							}`}
-						>
-							{t('navigation.properties')}
-						</Link>
+					<Link
+						href={`/${currentLocale}/properties`}
+						className={`px-3 py-2 rounded-md text-sm font-medium ${
+							pathname.includes("/properties")
+								? "bg-gray-100 text-gray-900"
+								: "text-gray-500 hover:text-gray-700"
+						}`}
+					>
+						{t('navigation.properties')}
+					</Link>
 					</div>
 					<div className="flex items-center space-x-4">
 						<div className="flex items-center space-x-2">

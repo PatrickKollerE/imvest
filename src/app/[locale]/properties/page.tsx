@@ -39,10 +39,14 @@ export default async function PropertiesPage({ params }: { params: Promise<{ loc
 
 			<div className="grid gap-4">
 				{properties.map((property) => (
-					<div key={property.id} className="border rounded-lg p-4">
+					<Link 
+						key={property.id} 
+						href={`/${locale}/properties/${property.id}`}
+						className="border rounded-lg p-4 block transition-all duration-200 hover:shadow-lg hover:border-gray-400 hover:bg-gray-50 cursor-pointer group"
+					>
 						<div className="flex justify-between items-start">
 							<div>
-								<h3 className="text-lg font-medium">{property.address}</h3>
+								<h3 className="text-lg font-medium group-hover:text-blue-600 transition-colors">{property.address}</h3>
 								<p className="text-gray-600">{property.city}, {property.postalCode}</p>
 								{property.sizeSqm && (
 									<p className="text-sm text-gray-500">{property.sizeSqm} m²</p>
@@ -61,20 +65,17 @@ export default async function PropertiesPage({ params }: { params: Promise<{ loc
 						</div>
 						
 						<div className="mt-4 flex gap-2">
-							<Link 
-								href={`/${locale}/properties/${property.id}`}
-								className="text-blue-600 hover:underline"
-							>
+							<span className="text-blue-600 group-hover:text-blue-700 transition-colors">
 								{t('properties.viewDetails')}
-							</Link>
+							</span>
 							<Link 
 								href={`/${locale}/properties/${property.id}/edit`}
-								className="text-gray-600 hover:underline"
+								className="text-gray-600 hover:text-gray-800 hover:underline transition-colors"
 							>
 								{t('properties.editProperty')}
 							</Link>
 						</div>
-					</div>
+					</Link>
 				))}
 				{properties.length === 0 && (
 					<div className="text-center py-8 text-gray-500">
