@@ -1,11 +1,18 @@
 import { getServerSession } from "next-auth";
+import { getToken } from "next-auth/jwt";
 import { authOptions } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getCache, setCache, CACHE_KEYS } from "@/lib/cache";
+import { NextRequest } from "next/server";
 
 export async function getCurrentUserId(): Promise<string | null> {
 	const session = await getServerSession(authOptions);
 	return (session?.user as { id?: string | null })?.id ?? null;
+}
+
+export async function getCurrentUserIdFromRequest(req: NextRequest): Promise<string | null> {
+	const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+	return token?.sub ?? null;
 }
 
 export async function getFirstOrganizationIdForUser(userId: string): Promise<string | null> {

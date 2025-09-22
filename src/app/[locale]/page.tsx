@@ -3,7 +3,7 @@ import { getCurrentUserId, getFirstOrganizationIdForUser } from "@/lib/auth-help
 import { formatCurrency } from "@/lib/currency";
 import { getTranslations } from 'next-intl/server';
 import Link from "next/link";
-import DashboardPieCharts from "@/components/DashboardPieCharts";
+import DashboardStats from "@/components/DashboardStats";
 
 async function getData() {
 	const userId = await getCurrentUserId();
@@ -110,23 +110,16 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 	return (
 		<div className="p-6 space-y-6">
 			<h1 className="text-2xl font-semibold">{t('dashboard.title')}</h1>
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-				<div className="border rounded p-4">
-					<div className="text-sm text-gray-500">{t('dashboard.monthlyIncome')}</div>
-					<div className="text-xl text-green-600">{formatCurrency(data.totals?.income ?? 0, locale as string)}</div>
-				</div>
-				<div className="border rounded p-4">
-					<div className="text-sm text-gray-500">{t('dashboard.monthlyExpenses')}</div>
-					<div className="text-xl text-red-600">{formatCurrency(data.totals?.expenses ?? 0, locale as string)}</div>
-				</div>
-				<div className="border rounded p-4">
-					<div className="text-sm text-gray-500">{t('dashboard.netCashflow')}</div>
-					<div className={`text-xl font-semibold ${(data.totals?.cashflow ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-						{formatCurrency(data.totals?.cashflow ?? 0, locale as string)}
-					</div>
-				</div>
-			</div>
-			<DashboardPieCharts properties={data.propertyData} locale={locale} />
+			
+			<DashboardStats 
+				initialData={{
+					income: data.totals?.income ?? 0,
+					expenses: data.totals?.expenses ?? 0,
+					cashflow: data.totals?.cashflow ?? 0,
+					propertyData: data.propertyData
+				}}
+				locale={locale}
+			/>
 			
 			<div>
 				<h2 className="text-lg font-medium mb-2">{t('dashboard.recentEvaluations')}</h2>

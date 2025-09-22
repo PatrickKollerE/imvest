@@ -3,6 +3,7 @@
     "loading": "Loading...",
     "save": "Save",
     "cancel": "Cancel",
+    "apply": "Apply",
     "delete": "Delete",
     "edit": "Edit",
     "add": "Add",
@@ -78,7 +79,26 @@
     "netCashflow": "Net Cashflow",
     "recentEvaluations": "Recent Evaluations",
     "noEvaluations": "No evaluations yet",
-    "createFirstEvaluation": "Create your first evaluation"
+    "createFirstEvaluation": "Create your first evaluation",
+    "timeRange": {
+      "monthly": "Monthly",
+      "ytd": "Year to Date",
+      "yearly": "Yearly",
+      "all": "All Time",
+      "custom": "Custom",
+      "selectCustomRange": "Select custom date range",
+      "startDate": "Start Date",
+      "endDate": "End Date"
+    },
+    "ytdIncome": "YTD Income",
+    "yearlyIncome": "Yearly Income",
+    "totalIncome": "Total Income",
+    "ytdExpenses": "YTD Expenses",
+    "yearlyExpenses": "Yearly Expenses",
+    "totalExpenses": "Total Expenses",
+    "ytdCashflow": "YTD Cashflow",
+    "yearlyCashflow": "Yearly Cashflow",
+    "totalCashflow": "Total Cashflow"
   },
   "properties": {
     "title": "Properties",
@@ -189,9 +209,24 @@
     "addFirstUtilityCosts": "Add your first utility costs to get started",
     "year": "Year",
     "month": "Month",
+    "totalAmount": "Total Amount",
+    "category": "Category",
+    "allocationMethod": "Allocation Method",
+    "allocationBySquareMeters": "By Square Meters",
+    "allocationByTenants": "By Number of Tenants",
+    "statementUrl": "Statement/Bill URL",
+    "viewStatement": "View Statement",
+    "confirmDelete": "Are you sure you want to delete these utility costs?",
+    "errorCreatingUtilityCost": "Error creating utility costs",
+    "errorDeletingUtilityCost": "Error deleting utility costs",
+    "errorUnauthorized": "You must be logged in to add utility costs",
+    "errorPropertyNotFound": "Property not found",
     "heating": "Heating",
     "electricity": "Electricity",
     "water": "Water",
+    "garbage": "Garbage",
+    "cleaning": "Cleaning",
+    "elevator": "Elevator",
     "internet": "Internet",
     "other": "Other",
     "total": "Total"
@@ -279,6 +314,11 @@
     "contactInfoRequired": "At least one contact information (email or phone) is required",
     "emailOrPhone": "At least one contact information is required",
     "optional": "optional",
-    "openEndedLease": "Leave empty for open-ended lease"
+    "openEndedLease": "Leave empty for open-ended lease",
+    "yearRequired": "Year is required",
+    "yearRangeInvalid": "Year must be between 2000 and 2100",
+    "totalAmountRequired": "Total amount must be greater than 0",
+    "allocationMethodRequired": "Allocation method is required",
+    "categoryRequired": "Category is required"
   }
 }

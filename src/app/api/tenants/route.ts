@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUserId, getFirstOrganizationIdForUser } from "@/lib/auth-helpers";
+import { getCurrentUserIdFromRequest, getFirstOrganizationIdForUser } from "@/lib/auth-helpers";
 
 // Helper function to determine if tenant data is complete enough for ACTIVE status
 function isTenantDataComplete(tenantData: {
@@ -26,8 +26,8 @@ function isTenantDataComplete(tenantData: {
 	return hasName && hasValidRent && hasLeaseStart && hasContactInfo;
 }
 
-export async function POST(req: Request) {
-	const userId = await getCurrentUserId();
+export async function POST(req: NextRequest) {
+	const userId = await getCurrentUserIdFromRequest(req);
 	if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	
 	const organizationId = await getFirstOrganizationIdForUser(userId);
@@ -115,8 +115,8 @@ export async function POST(req: Request) {
 	}
 }
 
-export async function PUT(req: Request) {
-	const userId = await getCurrentUserId();
+export async function PUT(req: NextRequest) {
+	const userId = await getCurrentUserIdFromRequest(req);
 	if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	
 	const organizationId = await getFirstOrganizationIdForUser(userId);
@@ -242,8 +242,8 @@ export async function PUT(req: Request) {
 	}
 }
 
-export async function DELETE(req: Request) {
-	const userId = await getCurrentUserId();
+export async function DELETE(req: NextRequest) {
+	const userId = await getCurrentUserIdFromRequest(req);
 	if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	
 	const organizationId = await getFirstOrganizationIdForUser(userId);
@@ -296,8 +296,8 @@ export async function DELETE(req: Request) {
 	}
 }
 
-export async function PATCH(req: Request) {
-	const userId = await getCurrentUserId();
+export async function PATCH(req: NextRequest) {
+	const userId = await getCurrentUserIdFromRequest(req);
 	if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	
 	const organizationId = await getFirstOrganizationIdForUser(userId);

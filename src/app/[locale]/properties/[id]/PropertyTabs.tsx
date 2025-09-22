@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from 'next-intl';
 import TenantsTab from "./tabs/TenantsTab";
 import IncomeExpensesTab from "./tabs/IncomeExpensesTab";
+import UtilityCostsTab from "./tabs/UtilityCostsTab";
 import ROITab from "./tabs/ROITab";
 
 type Property = {
@@ -51,6 +52,7 @@ type Property = {
 		year: number; 
 		totalAmountCents: number;
 		allocationMethod: string;
+		category: string;
 		generatedStatementUrl: string | null;
 		createdAt: Date;
 	}>;
@@ -105,7 +107,7 @@ export default function PropertyTabs({ property }: PropertyTabsProps) {
 						expenses={property.expenses} 
 					/>
 				)}
-				{activeTab === "utilities" && <div className="text-center py-8 text-gray-500">{t('utilities.title')} {t('common.loading')}...</div>}
+				{activeTab === "utilities" && <UtilityCostsTab propertyId={property.id} utilityCosts={property.utilityCosts} />}
 				{activeTab === "roi" && <ROITab property={property} />}
 			</div>
 		</div>

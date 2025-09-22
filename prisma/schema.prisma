@@ -38,6 +38,17 @@ enum AllocationMethod {
 	TENANTS
 }
 
+enum UtilityCategory {
+	HEATING
+	ELECTRICITY
+	WATER
+	GARBAGE
+	CLEANING
+	ELEVATOR
+	INTERNET
+	OTHER
+}
+
 enum Recommendation {
 	GREEN
 	YELLOW
@@ -170,12 +181,13 @@ model UtilityCost {
 	year               Int
 	totalAmountCents   Int
 	allocationMethod   AllocationMethod @default(SQUARE_METERS)
+	category           UtilityCategory  @default(OTHER)
 	generatedStatementUrl String?
 	createdAt          DateTime         @default(now())
 
 	property           Property         @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
-	@@unique([propertyId, year])
+	@@unique([propertyId, year, category])
 }
 
 // Evaluations can be linked to a property (existing) or stand-alone simulations

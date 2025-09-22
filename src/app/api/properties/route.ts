@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUserId, getFirstOrganizationIdForUser } from "@/lib/auth-helpers";
+import { getCurrentUserIdFromRequest, getFirstOrganizationIdForUser } from "@/lib/auth-helpers";
 import { generateNext12MonthsLoanExpenses, generateLoanExpensesFromBuyDate } from "@/lib/loan-calculations";
 
-export async function GET() {
-	const userId = await getCurrentUserId();
+export async function GET(req: NextRequest) {
+	const userId = await getCurrentUserIdFromRequest(req);
 	if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	
 	const organizationId = await getFirstOrganizationIdForUser(userId);
@@ -48,8 +48,8 @@ export async function GET() {
 	}
 }
 
-export async function POST(req: Request) {
-	const userId = await getCurrentUserId();
+export async function POST(req: NextRequest) {
+	const userId = await getCurrentUserIdFromRequest(req);
 	if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	
 	const organizationId = await getFirstOrganizationIdForUser(userId);

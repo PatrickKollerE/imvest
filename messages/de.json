@@ -3,6 +3,7 @@
     "loading": "Laden...",
     "save": "Speichern",
     "cancel": "Abbrechen",
+    "apply": "Anwenden",
     "delete": "Löschen",
     "edit": "Bearbeiten",
     "add": "Hinzufügen",
@@ -78,7 +79,26 @@
     "netCashflow": "Netto-Cashflow",
     "recentEvaluations": "Aktuelle Bewertungen",
     "noEvaluations": "Noch keine Bewertungen",
-    "createFirstEvaluation": "Erstellen Sie Ihre erste Bewertung"
+    "createFirstEvaluation": "Erstellen Sie Ihre erste Bewertung",
+    "timeRange": {
+      "monthly": "Monatlich",
+      "ytd": "Jahr bis heute",
+      "yearly": "Jährlich",
+      "all": "Alle",
+      "custom": "Benutzerdefiniert",
+      "selectCustomRange": "Benutzerdefinierten Zeitraum auswählen",
+      "startDate": "Startdatum",
+      "endDate": "Enddatum"
+    },
+    "ytdIncome": "Einnahmen Jahr bis heute",
+    "yearlyIncome": "Jährliche Einnahmen",
+    "totalIncome": "Gesamteinnahmen",
+    "ytdExpenses": "Ausgaben Jahr bis heute",
+    "yearlyExpenses": "Jährliche Ausgaben",
+    "totalExpenses": "Gesamtausgaben",
+    "ytdCashflow": "Cashflow Jahr bis heute",
+    "yearlyCashflow": "Jährlicher Cashflow",
+    "totalCashflow": "Gesamt-Cashflow"
   },
   "properties": {
     "title": "Immobilien",
@@ -189,9 +209,24 @@
     "addFirstUtilityCosts": "Fügen Sie Ihre ersten Nebenkosten hinzu",
     "year": "Jahr",
     "month": "Monat",
+    "totalAmount": "Gesamtbetrag",
+    "category": "Kategorie",
+    "allocationMethod": "Verteilungsmethode",
+    "allocationBySquareMeters": "Nach Quadratmetern",
+    "allocationByTenants": "Nach Anzahl Mieter",
+    "statementUrl": "Rechnung/Beleg URL",
+    "viewStatement": "Rechnung anzeigen",
+    "confirmDelete": "Sind Sie sicher, dass Sie diese Nebenkosten löschen möchten?",
+    "errorCreatingUtilityCost": "Fehler beim Erstellen der Nebenkosten",
+    "errorDeletingUtilityCost": "Fehler beim Löschen der Nebenkosten",
+    "errorUnauthorized": "Sie müssen angemeldet sein, um Nebenkosten hinzuzufügen",
+    "errorPropertyNotFound": "Immobilie nicht gefunden",
     "heating": "Heizung",
     "electricity": "Strom",
     "water": "Wasser",
+    "garbage": "Müll",
+    "cleaning": "Reinigung",
+    "elevator": "Aufzug",
     "internet": "Internet",
     "other": "Sonstiges",
     "total": "Gesamt"
@@ -279,6 +314,11 @@
     "contactInfoRequired": "Mindestens eine Kontaktinformation (E-Mail oder Telefon) ist erforderlich",
     "emailOrPhone": "Mindestens eine Kontaktinformation ist erforderlich",
     "optional": "optional",
-    "openEndedLease": "Leer lassen für unbefristeten Mietvertrag"
+    "openEndedLease": "Leer lassen für unbefristeten Mietvertrag",
+    "yearRequired": "Jahr ist erforderlich",
+    "yearRangeInvalid": "Jahr muss zwischen 2000 und 2100 liegen",
+    "totalAmountRequired": "Gesamtbetrag muss größer als 0 sein",
+    "allocationMethodRequired": "Verteilungsmethode ist erforderlich",
+    "categoryRequired": "Kategorie ist erforderlich"
   }
 }
