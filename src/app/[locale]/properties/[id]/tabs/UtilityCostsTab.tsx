@@ -24,6 +24,7 @@ export default function UtilityCostsTab({ propertyId, utilityCosts: initialUtili
   const t = useTranslations();
   const [utilityCosts, setUtilityCosts] = useState<UtilityCost[]>(initialUtilityCosts);
   const [showForm, setShowForm] = useState(false);
+  const [editingUtilityCost, setEditingUtilityCost] = useState<UtilityCost | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -73,7 +74,6 @@ export default function UtilityCostsTab({ propertyId, utilityCosts: initialUtili
     }
 
     const requestBody = {
-      propertyId,
       year: Number(formData.get('year')),
       totalAmountCents: Number(formData.get('totalAmount')) * 100,
       allocationMethod: formData.get('allocationMethod'),
@@ -84,19 +84,40 @@ export default function UtilityCostsTab({ propertyId, utilityCosts: initialUtili
     console.log('Request body:', requestBody);
 
     try {
-      const response = await fetch('/api/utility-costs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
-      });
+      let response;
+      if (editingUtilityCost) {
+        // Update existing utility cost
+        response = await fetch(`/api/utility-costs/${editingUtilityCost.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody),
+        });
+      } else {
+        // Create new utility cost
+        response = await fetch('/api/utility-costs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...requestBody, propertyId }),
+        });
+      }
       
       console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (response.ok) {
-        const newUtilityCost = await response.json();
-        setUtilityCosts([...utilityCosts, newUtilityCost]);
+        const savedUtilityCost = await response.json();
+        
+        if (editingUtilityCost) {
+          // Update existing utility cost in the list
+          setUtilityCosts(prev => prev.map(uc => 
+            uc.id === editingUtilityCost.id ? savedUtilityCost : uc
+          ));
+        } else {
+          // Add new utility cost to the list
+          setUtilityCosts(prev => [...prev, savedUtilityCost]);
+        }
+        
         setShowForm(false);
+        setEditingUtilityCost(null);
         // Reset form
         (e.target as HTMLFormElement).reset();
       } else {
@@ -108,15 +129,29 @@ export default function UtilityCostsTab({ propertyId, utilityCosts: initialUtili
         } else if (response.status === 404) {
           setError(t('utilities.errorPropertyNotFound'));
         } else {
-          setError(data.error || t('utilities.errorCreatingUtilityCost'));
+          setError(data.error || (editingUtilityCost ? t('utilities.errorUpdatingUtilityCost') : t('utilities.errorCreatingUtilityCost')));
         }
       }
     } catch (err) {
       console.error('Fetch error:', err);
-      setError(t('utilities.errorCreatingUtilityCost'));
+      setError(editingUtilityCost ? t('utilities.errorUpdatingUtilityCost') : t('utilities.errorCreatingUtilityCost'));
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEdit = (utilityCost: UtilityCost) => {
+    setEditingUtilityCost(utilityCost);
+    setShowForm(true);
+    setError(null);
+    setValidationErrors([]);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingUtilityCost(null);
+    setShowForm(false);
+    setError(null);
+    setValidationErrors([]);
   };
 
   const handleDelete = async (utilityCostId: string) => {
@@ -148,7 +183,7 @@ export default function UtilityCostsTab({ propertyId, utilityCosts: initialUtili
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">{t('utilities.title')}</h3>
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => editingUtilityCost ? handleCancelEdit() : setShowForm(!showForm)}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
           {showForm ? t('common.cancel') : t('utilities.addUtilityCosts')}
@@ -157,6 +192,9 @@ export default function UtilityCostsTab({ propertyId, utilityCosts: initialUtili
 
       {showForm && (
         <form onSubmit={handleSubmit} className="mb-6 p-4 border rounded-lg bg-gray-50">
+          <h4 className="text-lg font-medium mb-4">
+            {editingUtilityCost ? t('utilities.editUtilityCost') : t('utilities.addUtilityCost')}
+          </h4>
           {validationErrors.length > 0 && (
             <div className="bg-red-50 border border-red-200 rounded p-4 mb-4">
               <h4 className="text-red-800 font-medium mb-2">{t('validation.title')}</h4>
@@ -179,6 +217,7 @@ export default function UtilityCostsTab({ propertyId, utilityCosts: initialUtili
                 min="2000"
                 max="2100"
                 required
+                defaultValue={editingUtilityCost?.year || ''}
                 className="w-full border rounded px-3 py-2"
                 placeholder="2024"
               />
@@ -193,6 +232,7 @@ export default function UtilityCostsTab({ propertyId, utilityCosts: initialUtili
                 step="0.01"
                 min="0"
                 required
+                defaultValue={editingUtilityCost ? (editingUtilityCost.totalAmountCents / 100) : ''}
                 className="w-full border rounded px-3 py-2"
                 placeholder="0.00"
               />
@@ -204,6 +244,7 @@ export default function UtilityCostsTab({ propertyId, utilityCosts: initialUtili
               <select
                 name="category"
                 required
+                defaultValue={editingUtilityCost?.category || ''}
                 className="w-full border rounded px-3 py-2"
               >
                 <option value="HEATING">{t('utilities.heating')}</option>
@@ -223,6 +264,7 @@ export default function UtilityCostsTab({ propertyId, utilityCosts: initialUtili
               <select
                 name="allocationMethod"
                 required
+                defaultValue={editingUtilityCost?.allocationMethod || ''}
                 className="w-full border rounded px-3 py-2"
               >
                 <option value="SQUARE_METERS">{t('utilities.allocationBySquareMeters')}</option>
@@ -236,6 +278,7 @@ export default function UtilityCostsTab({ propertyId, utilityCosts: initialUtili
               <input
                 name="statementUrl"
                 type="url"
+                defaultValue={editingUtilityCost?.generatedStatementUrl || ''}
                 className="w-full border rounded px-3 py-2"
                 placeholder="https://example.com/statement.pdf"
               />
@@ -248,7 +291,7 @@ export default function UtilityCostsTab({ propertyId, utilityCosts: initialUtili
               disabled={loading}
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading ? t('common.loading') : t('common.save')}
+              {loading ? t('common.loading') : (editingUtilityCost ? t('utilities.updateUtilityCost') : t('utilities.saveUtilityCost'))}
             </button>
             <button
               type="button"
@@ -298,12 +341,20 @@ export default function UtilityCostsTab({ propertyId, utilityCosts: initialUtili
                     </a>
                   )}
                 </div>
-                <button
-                  onClick={() => handleDelete(utilityCost.id)}
-                  className="text-red-600 hover:text-red-800 text-sm"
-                >
-                  {t('common.delete')}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEdit(utilityCost)}
+                    className="text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    {t('common.edit')}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(utilityCost.id)}
+                    className="text-red-600 hover:text-red-800 text-sm"
+                  >
+                    {t('common.delete')}
+                  </button>
+                </div>
               </div>
             </div>
           ))}

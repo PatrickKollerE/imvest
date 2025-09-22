@@ -205,6 +205,11 @@
   "utilities": {
     "title": "Nebenkosten",
     "addUtilityCosts": "Nebenkosten hinzufügen",
+    "addUtilityCost": "Nebenkosten hinzufügen",
+    "editUtilityCost": "Nebenkosten bearbeiten",
+    "saveUtilityCost": "Nebenkosten speichern",
+    "updateUtilityCost": "Nebenkosten aktualisieren",
+    "errorUpdatingUtilityCost": "Fehler beim Aktualisieren der Nebenkosten",
     "noUtilityCosts": "Noch keine Nebenkosten erfasst",
     "addFirstUtilityCosts": "Fügen Sie Ihre ersten Nebenkosten hinzu",
     "year": "Jahr",

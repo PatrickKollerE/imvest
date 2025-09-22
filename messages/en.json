@@ -205,6 +205,11 @@
   "utilities": {
     "title": "Utility Costs",
     "addUtilityCosts": "Add Utility Costs",
+    "addUtilityCost": "Add Utility Cost",
+    "editUtilityCost": "Edit Utility Cost",
+    "saveUtilityCost": "Save Utility Cost",
+    "updateUtilityCost": "Update Utility Cost",
+    "errorUpdatingUtilityCost": "Error updating utility costs",
     "noUtilityCosts": "No utility costs recorded yet",
     "addFirstUtilityCosts": "Add your first utility costs to get started",
     "year": "Year",
