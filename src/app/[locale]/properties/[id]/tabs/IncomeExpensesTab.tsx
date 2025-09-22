@@ -35,6 +35,16 @@ export default function IncomeExpensesTab({ propertyId, incomes, expenses }: Inc
 	const t = useTranslations();
 
 	const allTransactions = [...incomes.map(i => ({ ...i, type: 'income' as const })), ...expenses.map(e => ({ ...e, type: 'expense' as const }))].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+	
+	// Filter transactions based on active tab
+	const filteredTransactions = allTransactions.filter(transaction => {
+		if (activeTab === "income") {
+			return transaction.type === 'income';
+		} else if (activeTab === "expenses") {
+			return transaction.type === 'expense';
+		}
+		return true; // Show all if neither tab is selected
+	});
 
 	async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();
@@ -144,6 +154,8 @@ export default function IncomeExpensesTab({ propertyId, incomes, expenses }: Inc
 										<option value="insurance">{t('incomeExpenses.categories.insurance')}</option>
 										<option value="taxes">{t('incomeExpenses.categories.taxes')}</option>
 										<option value="management">{t('incomeExpenses.categories.management')}</option>
+										<option value="loanInterest">{t('incomeExpenses.categories.loanInterest')}</option>
+										<option value="loanAmortization">{t('incomeExpenses.categories.loanAmortization')}</option>
 										<option value="other">{t('incomeExpenses.categories.other')}</option>
 									</>
 								)}
@@ -190,7 +202,7 @@ export default function IncomeExpensesTab({ propertyId, incomes, expenses }: Inc
 			)}
 
 			<div className="space-y-2">
-				{allTransactions.map((transaction) => (
+				{filteredTransactions.map((transaction) => (
 					<div key={transaction.id} className={`border rounded p-3 ${transaction.type === 'income' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
 						<div className="flex justify-between items-center">
 							<div>
@@ -205,7 +217,7 @@ export default function IncomeExpensesTab({ propertyId, incomes, expenses }: Inc
 						</div>
 					</div>
 				))}
-				{allTransactions.length === 0 && (
+				{filteredTransactions.length === 0 && (
 					<div className="text-center py-8 text-gray-500">
 						{t('incomeExpenses.noTransactions')}. {t('incomeExpenses.addFirstTransaction', { type: activeTab === "income" ? t('incomeExpenses.income').toLowerCase() : t('incomeExpenses.expenses').toLowerCase() })}.
 					</div>

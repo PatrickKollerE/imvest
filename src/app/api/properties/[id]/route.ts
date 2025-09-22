@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId, getFirstOrganizationIdForUser } from "@/lib/auth-helpers";
+import { generateNext12MonthsLoanExpenses } from "@/lib/loan-calculations";
 
 export async function PUT(
 	req: Request,
@@ -55,6 +56,79 @@ export async function PUT(
 				amortizationRatePct: amortizationRatePct !== undefined ? amortizationRatePct : existingProperty.amortizationRatePct,
 			},
 		});
+
+		// Check if loan data has changed and regenerate loan expenses if needed
+		const loanDataChanged = 
+			loanPrincipalCents !== undefined || 
+			interestRatePct !== undefined || 
+			amortizationRatePct !== undefined;
+
+		if (loanDataChanged) {
+			// Delete existing loan expenses
+			await prisma.expense.deleteMany({
+				where: {
+					propertyId: propertyId,
+					category: {
+						in: ['LOAN_INTEREST', 'LOAN_AMORTIZATION']
+					}
+				}
+			});
+
+			// Generate new loan expenses if loan data is provided
+			const finalLoanPrincipal = loanPrincipalCents !== undefined ? loanPrincipalCents : existingProperty.loanPrincipalCents;
+			const finalInterestRate = interestRatePct !== undefined ? interestRatePct : existingProperty.interestRatePct;
+			const finalAmortizationRate = amortizationRatePct !== undefined ? amortizationRatePct : existingProperty.amortizationRatePct;
+
+			if (finalLoanPrincipal && finalInterestRate && finalAmortizationRate) {
+				const loanData = {
+					loanPrincipalCents: finalLoanPrincipal,
+					interestRatePct: finalInterestRate,
+					amortizationRatePct: finalAmortizationRate,
+				};
+				
+				const loanExpenses = generateNext12MonthsLoanExpenses(propertyId, loanData);
+				
+				if (loanExpenses.length > 0) {
+					await prisma.expense.createMany({
+						data: loanExpenses,
+					});
+				}
+			}
+		} else {
+			// If no loan data was provided in the update, check if property has loan data but no loan expenses
+			const hasLoanData = existingProperty.loanPrincipalCents && 
+							   existingProperty.interestRatePct && 
+							   existingProperty.amortizationRatePct;
+			
+			if (hasLoanData) {
+				// Check if loan expenses exist
+				const existingLoanExpenses = await prisma.expense.count({
+					where: {
+						propertyId: propertyId,
+						category: {
+							in: ['LOAN_INTEREST', 'LOAN_AMORTIZATION']
+						}
+					}
+				});
+
+				// If no loan expenses exist, generate them
+				if (existingLoanExpenses === 0) {
+					const loanData = {
+						loanPrincipalCents: existingProperty.loanPrincipalCents,
+						interestRatePct: existingProperty.interestRatePct,
+						amortizationRatePct: existingProperty.amortizationRatePct,
+					};
+					
+					const loanExpenses = generateNext12MonthsLoanExpenses(propertyId, loanData);
+					
+					if (loanExpenses.length > 0) {
+						await prisma.expense.createMany({
+							data: loanExpenses,
+						});
+					}
+				}
+			}
+		}
 
 		return NextResponse.json(updatedProperty);
 	} catch (error) {

@@ -174,6 +174,8 @@
       "insurance": "Insurance",
       "taxes": "Taxes",
       "management": "Management",
+      "loanInterest": "Loan Interest",
+      "loanAmortization": "Loan Amortization",
       "other": "Other"
     }
   },
@@ -227,6 +229,7 @@
     "monthlyRent": "Expected Monthly Rent",
     "monthlyExpenses": "Expected Monthly Expenses",
     "evaluate": "Evaluate Property",
+    "cashflow": "Cashflow",
     "evaluationResults": "Evaluation Results",
     "recommendation": "Recommendation",
     "buy": "Buy",

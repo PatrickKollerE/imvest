@@ -74,7 +74,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 								<div className="text-sm text-gray-500">{new Date(e.createdAt).toLocaleString()}</div>
 								<div className="text-sm">{t('evaluate.cashflow')}: {formatCurrency(e.monthlyCashflowCents, locale as string)} — {t('roi.grossYield')} {e.grossYieldPct.toFixed(1)}%</div>
 							</div>
-							<span className="text-xs px-2 py-1 rounded bg-gray-100">{e.recommendation}</span>
+							<span className={`text-xs px-2 py-1 rounded text-white font-medium ${
+								e.recommendation === 'GREEN' ? 'bg-green-500' :
+								e.recommendation === 'YELLOW' ? 'bg-yellow-500' :
+								e.recommendation === 'RED' ? 'bg-red-500' :
+								'bg-gray-100 text-gray-800'
+							}`}>{e.recommendation}</span>
 						</div>
 					))}
 					{data.evaluations.length === 0 && <div className="text-sm text-gray-500">{t('dashboard.noEvaluations')}</div>}

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId, getFirstOrganizationIdForUser } from "@/lib/auth-helpers";
+import { generateNext12MonthsLoanExpenses } from "@/lib/loan-calculations";
 
 export async function GET() {
 	const userId = await getCurrentUserId();
@@ -74,6 +75,23 @@ export async function POST(req: Request) {
 				amortizationRatePct,
 			},
 		});
+
+		// Generate loan expenses if loan data is provided
+		if (loanPrincipalCents && interestRatePct && amortizationRatePct) {
+			const loanData = {
+				loanPrincipalCents,
+				interestRatePct,
+				amortizationRatePct,
+			};
+			
+			const loanExpenses = generateNext12MonthsLoanExpenses(property.id, loanData);
+			
+			if (loanExpenses.length > 0) {
+				await prisma.expense.createMany({
+					data: loanExpenses,
+				});
+			}
+		}
 
 		return NextResponse.json(property, { status: 201 });
 	} catch (error) {
